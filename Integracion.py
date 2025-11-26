@@ -1,65 +1,51 @@
 import numpy as np
-import pandas as pd
 
-data = {
-    'Toma': range(1, 26),
-    'Distancia_m': [0, 0.2, 0.4, 0.6, 0.8, 1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 
-                    2.8, 3, 3.2, 3.4, 3.6, 3.8, 4, 4.2, 4.4, 4.6, 4.8],
-    'Concentracion_mg_m3': [0, 0.0012, 0.0025, 0.0037, 0.0049, 0.0062, 0.0076, 
-                            0.0089, 0.0101, 0.0113, 0.4571, 1.8868, 2.8246, 
-                            3.7623, 4.7001, 5.6378, 6.5756, 7.5133, 8.4511, 
-                            9.3888, 10.963, 13.4525, 15.4842, 17.5162, 19.5479]
-}
+# 1) Datos (25 puntos)
+x = [0,0.2,0.4,0.6,1.0,1.2,1.4,1.6,2.0,2.2,2.4,2.6,3.0,3.2,3.4,3.6,4.0,4.2,4.4,4.6,5.0,5.2,5.4,5.6,6.0]
+C = [35.8026,33.7706,31.7389,29.707,25.6435,23.6116,21.5799,19.5479,15.4842,13.4525,10.963,9.3888,7.5133,6.5756,5.6378,4.7001,2.8246,1.8868,0.4571,0.0113,0.0089,0.0076,0.0062,0.0049,0.0025]
 
-df = pd.DataFrame(data)
+h_nominal = 0.2
 
+# 2) Trapecio
+def trapecio(x, y):
+    total = 0
+    for i in range(len(x)-1):
+        h = x[i+1] - x[i]
+        total += h * (y[i] + y[i+1]) / 2
+    return total
 
-x = df['Distancia_m'].values
-y = df['Concentracion_mg_m3'].values
-n_datos = len(x)
-n_segmentos = n_datos - 1
+# 3) Simpson 1/3
+def simpson_1_3_corregido(y, h):
+    n = len(y) - 1
+    if n % 2 != 0:
+        raise ValueError("Simpson 1/3 requiere número de intervalos par")
 
+    suma4 = sum(y[i] for i in range(1, n, 2))
+    suma2 = sum(y[i] for i in range(2, n, 2))
+    
+    return (h/3) * (y[0] + y[-1] + 4*suma4 + 2*suma2)
 
-h = x[1] - x[0] 
+# 4) Simpson 3/8
+def simpson_3_8_corregido(y, h):
+    n = len(y) - 1
+    if n % 3 != 0:
+        raise ValueError("Simpson 3/8 requiere múltiplo de 3")
 
-print(f"Análisis de Integración Numérica")
-print(f"Cantidad de datos: {n_datos}")
-print(f"Segmentos (intervalos): {n_segmentos}")
-print(f"Paso (h): {h:.2f} m")
-print("-" * 40)
-
-suma_trapecio = y[0] + y[-1] + 2 * np.sum(y[1:-1])
-integral_trapecio = (h / 2) * suma_trapecio
-
-if n_segmentos % 2 == 0:
-    suma_s13 = y[0] + y[-1]
-    suma_s13 += 4 * np.sum(y[1:-1:2]) 
-    suma_s13 += 2 * np.sum(y[2:-1:2])
-    integral_s13 = (h / 3) * suma_s13
-else:
-    integral_s13 = None
-    print("Simpson 1/3 no aplicable (segmentos impares).")
-
-if n_segmentos % 3 == 0:
-    suma_s38 = y[0] + y[-1]
-    for i in range(1, n_segmentos):
+    suma3 = 0
+    suma2 = 0
+    for i in range(1, n):
         if i % 3 == 0:
-            suma_s38 += 2 * y[i] 
+            suma2 += y[i]
         else:
-            suma_s38 += 3 * y[i] 
-    integral_s38 = (3 * h / 8) * suma_s38
-else:
-    integral_s38 = None
-    print("Simpson 3/8 no aplicable (segmentos no múltiplos de 3).")
+            suma3 += y[i]
 
-print(f"RESULTADOS DE LA INTEGRAL (Masa acumulada o Exposición Espacial):")
-print(f"a. Trapecio:    {integral_trapecio:.6f}")
-if integral_s13 is not None:
-    print(f"b. Simpson 1/3: {integral_s13:.6f}")
-if integral_s38 is not None:
-    print(f"c. Simpson 3/8: {integral_s38:.6f}")
+    return (3*h/8) * (y[0] + y[-1] + 3*suma3 + 2*suma2)
 
-print("-" * 40)
-print("Diferencia relativa entre Trapecio y Simpson 1/3:")
-diff = abs((integral_trapecio - integral_s13)/integral_s13)*100
-print(f"Diferencia: {diff:.4f}%")
+I_trap = trapecio(x, C)
+I_s13  = simpson_1_3_corregido(C, h_nominal)
+I_s38  = simpson_3_8_corregido(C, h_nominal)
+
+print("\nRESULTADOS:")
+print(f"Trapecio (h variable):   {I_trap:.6f}")
+print(f"Simpson 1/3 (h=0.2):     {I_s13:.6f}")
+print(f"Simpson 3/8 (h=0.2):     {I_s38:.6f}")
