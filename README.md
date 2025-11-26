@@ -31,21 +31,3 @@ El resultado demuestra que la elección del método es más crítica que la redu
 
 * **Éxito del Trapecio:** El método del Trapecio compuesto, implementado para calcular el área por segmento (h variable), se adaptó correctamente a la malla no uniforme. La afectación fue nula.
 * **Fallo de Simpson:** La implementación de las reglas clásicas de Simpson (asumiendo h constante) en una malla no uniforme genera un **error de truncamiento del 17%**, demostrando que el algoritmo es incompatible con este tipo de datos.
-
-
-## 📝 Respuestas a Preguntas de Análisis
-
-### A. ¿Qué tanto se afectaron los resultados de las integrales?
-
-La afectación fue dual. El método **Trapecio** demostró una afectación **nula** ( 0.001%), confirmando que la función es extremadamente suave y que los 6 datos eran redundantes. Sin embargo, los métodos de **Simpson** mostraron una afectación **severa** (aprox. 17%), debido a un error metodológico al aplicarlos a una malla con paso h variable.
-
-### B. ¿Cree usted que estos resultados se pueden generalizar para todas las integrales numéricas?
-
-**No.** Estos resultados no son generalizables. La razón por la que el Trapecio funcionó tan bien es la **suavidad extrema** de la curva de concentración de ácido acético. Si los datos provinieran de un proceso volátil (ej. señales con ruido o picos), el aumento de h (de 0.2m a 0.4m) habría amplificado el error del Trapecio, y el fallo de Simpson sería aún más catastrófico.
-
-### C. ¿Qué determina el porcentaje de afectación de los resultados de las integrales?
-
-El factor determinante fue la **compatibilidad del algoritmo con la malla**:
-
-1.  **Compatibilidad Metodológica:** El método de integración (Trapecio vs. Simpson clásico) fue el factor principal. Un algoritmo que se adapta a h variable (Trapecio) es robusto; uno que requiere h constante (Simpson clásico) fallará en la reducción de datos con remoción no uniforme.
-2.  **Suavidad de la Curva:** La baja curvatura de f(x) mantuvo el error del Trapecio casi a cero, a pesar de la duplicación del paso h en algunas zonas.
